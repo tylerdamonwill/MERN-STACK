@@ -57,6 +57,13 @@ class IssueAdd extends React.Component {
   }
 }
 
+const dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
+
+function jsonDateReviver(key, value) {
+	if (dateRegex.test(value)) return new Date(value);
+	return value;
+}
+
 function IssueRow(props){
 	const issue = props.issue;
 	return (
@@ -64,9 +71,9 @@ function IssueRow(props){
 			<td>{issue.id}</td>
 			<td>{issue.status}</td>
 			<td>{issue.owner}</td>
-			<td>{issue.created}</td>
+			<td>{issue.created.toDateString()}</td>
 			<td>{issue.effort}</td>
-			<td>{issue.due ? issue.due : 'no due date'}</td>
+			<td>{issue.due ? issue.due.toDateString() : ' '}</td>
 			<td>{issue.title}</td>
 		</tr>
 	);
@@ -96,7 +103,8 @@ class IssueList extends React.Component {
       headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({ query })
     });
-    const result = await response.json();
+    const body = await response.text();
+    const result = JSON.parse(body, jsonDateReviver);
     this.setState({ issues: result.data.issueList });
   }
 

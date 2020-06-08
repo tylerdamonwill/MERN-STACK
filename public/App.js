@@ -105,9 +105,16 @@ function (_React$Component2) {
   return IssueAdd;
 }(React.Component);
 
+var dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
+
+function jsonDateReviver(key, value) {
+  if (dateRegex.test(value)) return new Date(value);
+  return value;
+}
+
 function IssueRow(props) {
   var issue = props.issue;
-  return React.createElement("tr", null, React.createElement("td", null, issue.id), React.createElement("td", null, issue.status), React.createElement("td", null, issue.owner), React.createElement("td", null, issue.created), React.createElement("td", null, issue.effort), React.createElement("td", null, issue.due ? issue.due : 'no due date'), React.createElement("td", null, issue.title));
+  return React.createElement("tr", null, React.createElement("td", null, issue.id), React.createElement("td", null, issue.status), React.createElement("td", null, issue.owner), React.createElement("td", null, issue.created.toDateString()), React.createElement("td", null, issue.effort), React.createElement("td", null, issue.due ? issue.due.toDateString() : ' '), React.createElement("td", null, issue.title));
 }
 
 var IssueList =
@@ -139,7 +146,7 @@ function (_React$Component3) {
       var _loadData = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee() {
-        var query, response, result;
+        var query, response, body, result;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -159,15 +166,16 @@ function (_React$Component3) {
               case 3:
                 response = _context.sent;
                 _context.next = 6;
-                return response.json();
+                return response.text();
 
               case 6:
-                result = _context.sent;
+                body = _context.sent;
+                result = JSON.parse(body, jsonDateReviver);
                 this.setState({
                   issues: result.data.issueList
                 });
 
-              case 8:
+              case 9:
               case "end":
                 return _context.stop();
             }
