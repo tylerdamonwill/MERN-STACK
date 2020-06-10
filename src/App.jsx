@@ -1,33 +1,33 @@
 class IssueFilter extends React.Component {
 	render() {
-	 return (
-	 <div>This is a place holder for the issue filter.</div>
-	);
-  }
+		return (
+			<div>This is a place holder for the issue filter.</div>
+			);
+	}
 }
 
 function IssueTable(props){
 	const issueRows = props.issues.map(issue => 
 		<IssueRow key={issue.id} issue={issue}/>
-	);
+		);
 	return (
 		<table className="bordered-table">
-			<thead>
-				<tr>
-					<th>ID</th>
-					<th>Status</th>
-					<th>Owner</th>
-					<th>Created</th>
-					<th>Effort</th>
-					<th>Due Date</th>
-					<th>Title</th>
-				</tr>
-			</thead>
-			<tbody>
-				{issueRows}
-			</tbody>
+		<thead>
+		<tr>
+		<th>ID</th>
+		<th>Status</th>
+		<th>Owner</th>
+		<th>Created</th>
+		<th>Effort</th>
+		<th>Due Date</th>
+		<th>Title</th>
+		</tr>
+		</thead>
+		<tbody>
+		{issueRows}
+		</tbody>
 		</table>
-	);
+		);
 }
 
 class IssueAdd extends React.Component {
@@ -48,14 +48,14 @@ class IssueAdd extends React.Component {
 	}
 
 	render() {
-	 return (
-	 <form name="issueAdd" onSubmit={this.handleSubmit}>
-	 	<input type="text" name="owner" placeholder="Owner" />
-	 	<input type="text" name="title" placeholder="Title" />
-	 	<button>Add</button>
-	 </form>
-	);
-  }
+		return (
+			<form name="issueAdd" onSubmit={this.handleSubmit}>
+			<input type="text" name="owner" placeholder="Owner" />
+			<input type="text" name="title" placeholder="Title" />
+			<button>Add</button>
+			</form>
+			);
+	}
 }
 
 const dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
@@ -69,15 +69,15 @@ function IssueRow(props){
 	const issue = props.issue;
 	return (
 		<tr>
-			<td>{issue.id}</td>
-			<td>{issue.status}</td>
-			<td>{issue.owner}</td>
-			<td>{issue.created.toDateString()}</td>
-			<td>{issue.effort}</td>
-			<td>{issue.due ? issue.due.toDateString() : ' '}</td>
-			<td>{issue.title}</td>
+		<td>{issue.id}</td>
+		<td>{issue.status}</td>
+		<td>{issue.owner}</td>
+		<td>{issue.created.toDateString()}</td>
+		<td>{issue.effort}</td>
+		<td>{issue.due ? issue.due.toDateString() : ' '}</td>
+		<td>{issue.title}</td>
 		</tr>
-	);
+		);
 }
 
 class IssueList extends React.Component {
@@ -91,32 +91,11 @@ class IssueList extends React.Component {
 		this.loadData();
 	}
 
-  async loadData() {
-    const query = `query {
-      issueList {
-        id title status owner
-        created effort due
-      }
-    }`;
-
-    const response = await fetch('/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json'},
-      body: JSON.stringify({ query })
-    });
-    const body = await response.text();
-    const result = JSON.parse(body, jsonDateReviver);
-    this.setState({ issues: result.data.issueList });
-  }
-
-	async createIssue(issue) {
-		const query = `mutation {
-			issueAdd(issue:{
-				title: "${issue.title}",
-				owner: "${issue.owner}",
-				due: "${issue.due.toISOString()}",
-			}) {
-				id
+	async loadData() {
+		const query = `query {
+			issueList {
+				id title status owner
+				created effort due
 			}
 		}`;
 
@@ -125,21 +104,38 @@ class IssueList extends React.Component {
 			headers: { 'Content-Type': 'application/json'},
 			body: JSON.stringify({ query })
 		});
+		const body = await response.text();
+		const result = JSON.parse(body, jsonDateReviver);
+		this.setState({ issues: result.data.issueList });
+	}
+
+	async createIssue(issue) {
+		const query = `mutation issueAdd($issue: IssueInputs!) {
+			issueAdd(issue: $issue) {
+				id
+			}
+		}`;
+
+		const response = await fetch('/graphql', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json'},
+			body: JSON.stringify({ query, variables: { issue } })
+		});
 		this.loadData();
 	}
 
-  render() {
-    return (
-      <React.Fragment>
-      <h1>Issue Tracker</h1>
-      <IssueFilter />
-      <hr />
-      <IssueTable issues={this.state.issues} />
-      <hr />
-      <IssueAdd createIssue={this.createIssue}/>
-      </React.Fragment>
-    );
-  }
+	render() {
+		return (
+			<React.Fragment>
+			<h1>Issue Tracker</h1>
+			<IssueFilter />
+			<hr />
+			<IssueTable issues={this.state.issues} />
+			<hr />
+			<IssueAdd createIssue={this.createIssue}/>
+			</React.Fragment>
+			);
+	}
 }
 
 

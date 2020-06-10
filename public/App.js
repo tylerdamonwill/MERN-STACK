@@ -151,7 +151,7 @@ function (_React$Component3) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                query = "query {\n      issueList {\n        id title status owner\n        created effort due\n      }\n    }";
+                query = "query {\n\t\t\tissueList {\n\t\t\t\tid title status owner\n\t\t\t\tcreated effort due\n\t\t\t}\n\t\t}";
                 _context.next = 3;
                 return fetch('/graphql', {
                   method: 'POST',
@@ -200,7 +200,7 @@ function (_React$Component3) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                query = "mutation {\n\t\t\tissueAdd(issue:{\n\t\t\t\ttitle: \"".concat(issue.title, "\",\n\t\t\t\towner: \"").concat(issue.owner, "\",\n\t\t\t\tdue: \"").concat(issue.due.toISOString(), "\",\n\t\t\t}) {\n\t\t\t\tid\n\t\t\t}\n\t\t}");
+                query = "mutation issueAdd($issue: IssueInputs!) {\n\t\t\tissueAdd(issue: $issue) {\n\t\t\t\tid\n\t\t\t}\n\t\t}";
                 _context2.next = 3;
                 return fetch('/graphql', {
                   method: 'POST',
@@ -208,7 +208,10 @@ function (_React$Component3) {
                     'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                    query: query
+                    query: query,
+                    variables: {
+                      issue: issue
+                    }
                   })
                 });
 
