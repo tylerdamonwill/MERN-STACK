@@ -3,6 +3,12 @@ const express = require('express');
 const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
+const { MongoClient } = require('mongodb');
+
+
+const url = 'mongodb+srv://admin:mong9933@cluster0.lhqzq.mongodb.net/issuetracker?retryWrites=true&w=majority';
+
+let db;
 
 let aboutMessage = "Issue Tracker API v1.0";
 
@@ -17,7 +23,7 @@ const issuesDB = [
 	created: new Date('2020-05-10'), due: new Date('2020-09-23'),
 	title: 'Some random issue',
 }
-]
+];
 
 const GraphQLDate = new GraphQLScalarType({
 	name: 'GraphQLDate',
@@ -53,8 +59,9 @@ function setAboutMessage(_, { message }) {
 	return aboutMessage = message;
 }
 
-function issueList() {
-	return issuesDB;
+async function issueList() {
+	const issues = await db.collection('issues').find({}).toArray();
+	return issues;
 }
 
 function validateIssue(issue){
@@ -81,6 +88,13 @@ function issueAdd(_, { issue }) {
 	return issue;
 }
 
+async function connectToDb() {
+	const client = new MongoClient(url, { useUnifiedTopology: true });
+	await client.connect();
+	console.log('Connected to MongoDB at', url);
+	db = client.db();
+}
+
 const server = new ApolloServer({
 	typeDefs: fs.readFileSync('./server/schema.graphql', 'utf-8'),
 	resolvers,
@@ -100,6 +114,13 @@ app.use(express.static('public'));
 
 server.applyMiddleware({ app, path: '/graphql' });
 
-app.listen(3000, function () {
-	console.log('App started on port 3000 my dude');
-});
+(async function () {
+	try {
+		await connectToDb();
+		app.listen(3000, function () {
+			console.log('App started on port 3000');
+		});
+	} catch (err) {
+		console.log('ERROR:', err);
+	}
+})();
