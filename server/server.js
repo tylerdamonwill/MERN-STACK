@@ -12,19 +12,6 @@ let db;
 
 let aboutMessage = "Issue Tracker API v1.0";
 
-const issuesDB = [
-{
-	id: 1, status: 'New', owner: 'Tyler', effort: 5,
-	created: new Date('2020-06-06'), due: undefined,
-	title: 'Error in console when clicking Add',
-},
-{
-	id: 2, status: 'Assigned', owner: 'Liz', effort: 14,
-	created: new Date('2020-05-10'), due: new Date('2020-09-23'),
-	title: 'Some random issue',
-}
-];
-
 const GraphQLDate = new GraphQLScalarType({
 	name: 'GraphQLDate',
 	description: 'A Date() type in GraphQL as a scalar',
@@ -64,6 +51,15 @@ async function issueList() {
 	return issues;
 }
 
+async function getNextSequence(name) {
+  const result = await db.collection('counters').findOneAndUpdate(
+    { _id: name },
+    { $inc: { current: 1 } },
+    { returnOriginal: false },
+  );
+  return result.value.current;
+}
+
 function validateIssue(issue){
 	const errors = [];
 
@@ -80,12 +76,15 @@ function validateIssue(issue){
 	}
 }
 
-function issueAdd(_, { issue }) {
-	validateIssue(issue);
-	issue.created = new Date();
-	issue.id = issuesDB.length + 1;
-	issuesDB.push(issue);
-	return issue;
+async function issueAdd(_, { issue }) {
+  validateIssue(issue);
+  issue.created = new Date();
+  issue.id = await getNextSequence('issues');
+
+  const result = await db.collection('issues').insertOne(issue);
+  const savedIssue = await db.collection('issues')
+    .findOne({ _id: result.insertedId });
+  return savedIssue;
 }
 
 async function connectToDb() {
@@ -118,7 +117,7 @@ server.applyMiddleware({ app, path: '/graphql' });
 	try {
 		await connectToDb();
 		app.listen(3000, function () {
-			console.log('App started on port 3000');
+			console.log('App started on port 3000 my dude');
 		});
 	} catch (err) {
 		console.log('ERROR:', err);
